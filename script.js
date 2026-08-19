@@ -4,6 +4,7 @@ const menuStart = document.querySelector('#menuStart');
 const settingsButton = document.querySelector('#settingsButton');
 const settingsPanel = document.querySelector('#settingsPanel');
 const soundToggle = document.querySelector('#soundToggle');
+const modeButtons = [...document.querySelectorAll('.mode-option')];
 const countdown = document.querySelector('#countdown');
 const countdownNumber = document.querySelector('#countdownNumber');
 const gameShell = document.querySelector('.game-shell');
@@ -23,6 +24,8 @@ const sounds = {
 let score = 0, combo = 0, misses = 0, bombHits = 0, elapsed = 0, best = 0;
 let gameOn = false, activeMoles = new Map(), timerId, spawnId;
 let soundEnabled = localStorage.getItem('whackSound') !== 'off';
+let mode = 'medium';
+const modeSettings = { easy: { visible: 2500, exit: .8 }, medium: { visible: 1750, exit: .6 }, hard: { visible: 1500, exit: .5 }, impossible: { visible: 650, exit: .1 } };
 
 function synthPop() {
   const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -47,9 +50,10 @@ function spawnMole() {
     const hole = available[Math.floor(Math.random() * available.length)];
     const golden = Math.random() < .01;
     const bomb = !golden && Math.random() < .05;
-    const visibleFor = 2500;
-    const mole = { golden, bomb, until: Date.now() + visibleFor + 280, timeout: null };
-    activeMoles.set(hole, mole); hole.classList.add('up'); hole.classList.toggle('golden', golden); hole.classList.toggle('bomb', bomb);
+    const settings = modeSettings[mode];
+    const visibleFor = settings.visible;
+    const mole = { golden, bomb, until: Date.now() + visibleFor, timeout: null };
+    activeMoles.set(hole, mole); hole.style.setProperty('--exit-speed', `${settings.exit}s`); hole.classList.add('up'); hole.classList.toggle('golden', golden); hole.classList.toggle('bomb', bomb);
     mole.timeout = setTimeout(() => {
       if (!activeMoles.has(hole)) return;
       activeMoles.delete(hole); hole.classList.remove('up', 'golden', 'bomb');
@@ -77,6 +81,7 @@ function startGame() {
 }
 
 function burst() { for (let i = 0; i < 18; i++) { const s = document.createElement('i'); s.className = 'spark'; s.style.left = '50%'; s.style.top = '43%'; s.style.setProperty('--x', `${Math.random() * 320 - 160}px`); s.style.setProperty('--y', `${Math.random() * 260 - 130}px`); confetti.appendChild(s); setTimeout(() => s.remove(), 850); } }
+function hitFeedback(hole, text) { hole.classList.add('splatted'); const label = document.createElement('span'); label.className = 'hit-feedback'; label.textContent = text; hole.appendChild(label); setTimeout(() => { hole.classList.remove('splatted'); label.remove(); }, 650); }
 
 holes.forEach(hole => hole.addEventListener('click', () => {
   if (!gameOn) return;
@@ -84,11 +89,12 @@ holes.forEach(hole => hole.addEventListener('click', () => {
   if (!mole || Date.now() > mole.until) { registerMiss(); return; }
   clearTimeout(mole.timeout); activeMoles.delete(hole); hole.classList.remove('up', 'golden', 'bomb'); hole.classList.add('hit'); setTimeout(() => hole.classList.remove('hit'), 300);
   if (mole.bomb) { score -= 20; combo = 0; bombHits++; popMessage('BOMB MOLE -20'); playSound('miss'); if (bombHits > 5) endGame('too many bombs, round over'); }
-  else { score += mole.golden ? 50 : 5; misses = 0; combo++; best = Math.max(best, score); playSound('hit'); if (combo >= 3) { popMessage('COMBO!', true); burst(); } else popMessage(mole.golden ? '+50 GOLDEN MOLE' : '+5 points'); }
+  else { score += mole.golden ? 50 : 5; misses = 0; combo++; best = Math.max(best, score); hitFeedback(hole, mole.golden ? '+50' : '+5'); playSound('hit'); if (combo >= 3) { popMessage('COMBO!', true); burst(); } else popMessage(mole.golden ? '+50 GOLDEN MOLE' : '+5 points'); }
   update();
 }));
 
 startButton.addEventListener('click', startGame);
+modeButtons.forEach(button => button.addEventListener('click', () => { if (gameOn) return; mode = button.dataset.mode; modeButtons.forEach(item => item.classList.toggle('active', item === button)); }));
 settingsButton.addEventListener('click', () => {
   const isHidden = settingsPanel.hidden;
   settingsPanel.hidden = !isHidden; settingsButton.setAttribute('aria-expanded', String(isHidden));
