@@ -11,6 +11,21 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <section class="main-menu" id="mainMenu" aria-label="Main menu">
+    <div class="menu-card">
+      <div class="menu-mark"></div>
+      <p class="eyebrow">OVERWORLD PATCH</p>
+      <h1>WHACK-A-MOLE!</h1>
+      <p class="menu-copy">a tiny break in the grass. a very large amount of bonking.</p>
+      <button class="menu-button primary" id="menuStart">Start <span>→</span></button>
+      <button class="menu-button secondary" id="settingsButton" aria-expanded="false">Settings <span>⚙</span></button>
+      <div class="settings-panel" id="settingsPanel" hidden>
+        <div class="settings-row"><span>Sound effects</span><button class="sound-toggle on" id="soundToggle" aria-pressed="true">On</button></div>
+        <p>more settings coming soon</p>
+      </div>
+    </div>
+  </section>
+  <div class="countdown" id="countdown" hidden aria-live="assertive"><span id="countdownNumber">3</span></div>
   <main class="game-shell">
     <header class="topbar">
       <div class="brand"><span class="brand-icon"></span><span>OVERWORLD</span></div>

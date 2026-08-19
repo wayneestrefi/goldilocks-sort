@@ -1,4 +1,12 @@
 const holes = [...document.querySelectorAll('.hole')];
+const mainMenu = document.querySelector('#mainMenu');
+const menuStart = document.querySelector('#menuStart');
+const settingsButton = document.querySelector('#settingsButton');
+const settingsPanel = document.querySelector('#settingsPanel');
+const soundToggle = document.querySelector('#soundToggle');
+const countdown = document.querySelector('#countdown');
+const countdownNumber = document.querySelector('#countdownNumber');
+const gameShell = document.querySelector('.game-shell');
 const scoreEl = document.querySelector('#score');
 const timeEl = document.querySelector('#time');
 const comboEl = document.querySelector('#combo');
@@ -14,6 +22,7 @@ const sounds = {
 };
 let score = 0, combo = 0, misses = 0, bombHits = 0, elapsed = 0, best = 0;
 let gameOn = false, activeMoles = new Map(), timerId, spawnId;
+let soundEnabled = localStorage.getItem('whackSound') !== 'off';
 
 function synthPop() {
   const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -23,7 +32,7 @@ function synthPop() {
   gain.gain.setValueAtTime(.0001, context.currentTime); gain.gain.exponentialRampToValueAtTime(.16, context.currentTime + .008); gain.gain.exponentialRampToValueAtTime(.0001, context.currentTime + .1);
   oscillator.connect(gain); gain.connect(context.destination); oscillator.start(); oscillator.stop(context.currentTime + .11);
 }
-const playSound = (name) => { const audio = new Audio(sounds[name]); audio.volume = name === 'miss' ? .22 : .42; audio.onerror = name === 'hit' ? synthPop : null; audio.play().catch(() => { if (name === 'hit') synthPop(); }); };
+const playSound = (name) => { if (!soundEnabled) return; const audio = new Audio(sounds[name]); audio.volume = name === 'miss' ? .22 : .42; audio.onerror = name === 'hit' ? synthPop : null; audio.play().catch(() => { if (name === 'hit') synthPop(); }); };
 const displayScore = () => score < 0 ? `-${String(Math.abs(score)).padStart(2, '0')}` : String(score).padStart(3, '0');
 const update = () => { scoreEl.textContent = displayScore(); timeEl.textContent = elapsed; comboEl.textContent = combo; bestEl.textContent = best; missesEl.textContent = misses; };
 const popMessage = (text, isCombo = false) => { message.textContent = text; message.classList.toggle('combo-pop', isCombo); if (isCombo) { void message.offsetWidth; message.classList.add('combo-pop'); } };
@@ -80,4 +89,23 @@ holes.forEach(hole => hole.addEventListener('click', () => {
 }));
 
 startButton.addEventListener('click', startGame);
+settingsButton.addEventListener('click', () => {
+  const isHidden = settingsPanel.hidden;
+  settingsPanel.hidden = !isHidden; settingsButton.setAttribute('aria-expanded', String(isHidden));
+});
+soundToggle.addEventListener('click', () => {
+  soundEnabled = !soundEnabled; localStorage.setItem('whackSound', soundEnabled ? 'on' : 'off');
+  soundToggle.textContent = soundEnabled ? 'On' : 'Off'; soundToggle.classList.toggle('on', soundEnabled); soundToggle.setAttribute('aria-pressed', String(soundEnabled));
+  if (soundEnabled) playSound('hit');
+});
+menuStart.addEventListener('click', () => {
+  mainMenu.hidden = true; gameShell.classList.add('is-visible'); countdown.hidden = false; menuStart.disabled = true;
+  let number = 3; countdownNumber.textContent = number;
+  const countdownId = setInterval(() => {
+    number--;
+    if (number > 0) countdownNumber.textContent = number;
+    else { clearInterval(countdownId); countdownNumber.textContent = 'GO'; setTimeout(() => { countdown.hidden = true; menuStart.disabled = false; startGame(); }, 450); }
+  }, 1000);
+});
+soundToggle.textContent = soundEnabled ? 'On' : 'Off'; soundToggle.classList.toggle('on', soundEnabled); soundToggle.setAttribute('aria-pressed', String(soundEnabled));
 update();
