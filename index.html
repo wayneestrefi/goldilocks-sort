@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#101b24" />
+  <title>Block Bash | Whack-a-Mole</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="game-shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-icon"></span><span>OVERWORLD</span></div>
+      <div class="score-card" aria-live="polite"><span class="label">SCORE</span><span id="score">000</span></div>
+    </header>
+
+    <section class="hero">
+      <p class="eyebrow">A LITTLE BREAK IN THE OVERWORLD</p>
+      <h1>WHACK-A-MOLE</h1>
+      <p class="subtitle">mobs are hiding under the overworld grass. dig them out and bonk them.</p>
+    </section>
+
+    <section class="hud" aria-label="Game status">
+      <div class="stat"><span class="stat-icon clock">◷</span><div><small>TIME</small><strong><span id="time">0</span>s</strong></div></div>
+      <div class="stat"><span class="stat-icon combo">×</span><div><small>COMBO</small><strong id="combo">0</strong></div></div>
+      <div class="stat"><span class="stat-icon best">★</span><div><small>BEST</small><strong id="best">0</strong></div></div>
+      <div class="stat"><span class="stat-icon misses">!</span><div><small>MISSES</small><strong id="misses">0</strong></div></div>
+    </section>
+
+    <section class="board-wrap">
+      <div class="board-top"><span>OVERWORLD PATCH</span><span id="message">PRESS START TO PLAY</span></div>
+      <div class="grid" id="grid" aria-label="Nine mole holes">
+        <button class="hole" data-hole="0" aria-label="Hole 1"><span class="mole" aria-hidden="true"><i></i></span></button>
+        <button class="hole" data-hole="1" aria-label="Hole 2"><span class="mole" aria-hidden="true"><i></i></span></button>
+        <button class="hole" data-hole="2" aria-label="Hole 3"><span class="mole" aria-hidden="true"><i></i></span></button>
+        <button class="hole" data-hole="3" aria-label="Hole 4"><span class="mole" aria-hidden="true"><i></i></span></button>
+        <button class="hole" data-hole="4" aria-label="Hole 5"><span class="mole" aria-hidden="true"><i></i></span></button>
+        <button class="hole" data-hole="5" aria-label="Hole 6"><span class="mole" aria-hidden="true"><i></i></span></button>
+        <button class="hole" data-hole="6" aria-label="Hole 7"><span class="mole" aria-hidden="true"><i></i></span></button>
+        <button class="hole" data-hole="7" aria-label="Hole 8"><span class="mole" aria-hidden="true"><i></i></span></button>
+        <button class="hole" data-hole="8" aria-label="Hole 9"><span class="mole" aria-hidden="true"><i></i></span></button>
+      </div>
+      <div class="grass-edge"></div>
+    </section>
+
+    <button class="start-button" id="startButton">Start round <span>→</span></button>
+    <p class="tip">click a mob when it appears <b>•</b> quick hits build your combo</p>
+  </main>
+  <div class="confetti" id="confetti" aria-hidden="true"></div>
+  <script src="script.js"></script>
+</body>
+</html>
