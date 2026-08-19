@@ -36,9 +36,9 @@ const sounds = {
   miss: 'https://assets.mixkit.co/active_storage/sfx/2955/2955-preview.mp3'
 };
 let score = 0, combo = 0, misses = 0, bombHits = 0, wins = 0, elapsed = 0, best = 0;
-let gameOn = false, paused = false, activeMoles = new Map(), timerId, spawnId;
+let gameOn = false, paused = false, activeMoles = new Map(), timerId, spawnId, challengeTimer, challengeClock;
 let soundEnabled = localStorage.getItem('whackSound') !== 'off';
-let mode = 'medium';
+let mode = 'medium', challengeUsed = false, challengeHits = 0;
 const modeSettings = { easy: { visible: 2500, exit: .8 }, medium: { visible: 1750, exit: .6 }, hard: { visible: 1500, exit: .5 }, impossible: { visible: 650, exit: .1 } };
 const roasts = [
   'the moles are celebrating in your grass patch.',
@@ -67,12 +67,26 @@ function finishIfNeeded() { if (misses >= 10) endGame('10 misses in a row, round
 function registerMiss(label = 'missed, no penalty') { combo = 0; misses++; playSound('miss'); popMessage(label); update(); finishIfNeeded(); }
 function expireMole(hole, mole) { if (!activeMoles.has(hole) || paused) return; activeMoles.delete(hole); hole.classList.remove('up', 'golden', 'bomb', 'blast'); registerMiss(mole.golden ? 'golden missed, no penalty' : 'missed, no penalty'); }
 
+function clearChallenge() { clearTimeout(challengeTimer); clearInterval(challengeClock); challengeTimer = null; challengeClock = null; }
+function startGoldenChallenge() {
+  challengeUsed = true; clearTimeout(spawnId); activeMoles.forEach(mole => clearTimeout(mole.timeout)); activeMoles.clear(); holes.forEach(hole => hole.classList.remove('up', 'golden', 'angel', 'bomb', 'blast'));
+  challengeHits = 0; const chosen = [...holes].sort(() => Math.random() - .5).slice(0, 3);
+  chosen.forEach(hole => { const mole = { golden:true, challenge:true, until:Date.now() + 2000, timeout:null }; activeMoles.set(hole, mole); hole.classList.add('up', 'golden'); });
+  const started = Date.now(); popMessage('GOLDEN TRIO · 2.0s', true);
+  challengeClock = setInterval(() => { popMessage(`GOLDEN TRIO · ${Math.max(0, (2000 - (Date.now() - started)) / 1000).toFixed(1)}s`, true); }, 100);
+  challengeTimer = setTimeout(() => { clearChallenge(); activeMoles.clear(); holes.forEach(hole => hole.classList.remove('up', 'golden')); popMessage('trio missed'); spawnMole(); }, 2000);
+}
+function summonChallengeAngel() {
+  const hole = holes[Math.floor(Math.random() * holes.length)]; const mole = { golden:true, angel:true, challengeAngel:true, until:Date.now() + 650, timeout:null }; activeMoles.set(hole, mole); hole.classList.add('up', 'golden', 'angel'); popMessage('ANGEL MOLE · NOW!');
+  mole.timeout = setTimeout(() => { if (!activeMoles.has(hole)) return; activeMoles.delete(hole); hole.classList.remove('up', 'golden', 'angel'); popMessage('angel escaped'); spawnMole(); }, 650);
+}
+
 function spawnMole() {
   if (!gameOn) return;
   const available = holes.filter(hole => !activeMoles.has(hole));
   if (available.length) {
     const hole = available[Math.floor(Math.random() * available.length)];
-    const angel = Math.random() < .01;
+    const angel = Math.random() < .001;
     const golden = !angel && Math.random() < .01;
     const blast = !angel && !golden && Math.floor(Math.random() * 75) === 0;
     const bomb = !angel && !blast && Math.floor(Math.random() * 20) === 0;
@@ -95,12 +109,12 @@ function endGame(reason = 'round over', roastOverride = '') {
   activeMoles.forEach((mole, hole) => { clearTimeout(mole.timeout); hole.classList.remove('up', 'golden', 'angel', 'bomb', 'blast', 'scared', 'blast-charge', 'boom'); });
   holes.forEach(hole => hole.classList.remove('up', 'golden', 'angel', 'bomb', 'blast', 'scared', 'blast-charge', 'boom'));
   activeMoles.clear(); startButton.disabled = false; startButton.innerHTML = 'Play again <span>↻</span>';
-  popMessage(reason); burst(); update(); loseReason.textContent = reason === 'BOOM!' ? 'you clicked the volatile bomb mole.' : reason; roastEl.textContent = roastOverride || roasts[Math.floor(Math.random() * roasts.length)]; loseScreen.hidden = false;
+  clearChallenge(); popMessage(reason); burst(); update(); loseReason.textContent = reason === 'BOOM!' ? 'you clicked the volatile bomb mole.' : reason; roastEl.textContent = roastOverride || roasts[Math.floor(Math.random() * roasts.length)]; loseScreen.hidden = false;
 }
 
 function startGame() {
   clearInterval(timerId); clearTimeout(spawnId); activeMoles.forEach((mole, hole) => { clearTimeout(mole.timeout); hole.classList.remove('up', 'golden', 'angel', 'bomb', 'blast', 'scared', 'blast-charge', 'boom'); }); activeMoles.clear();
-  score = 0; combo = 0; misses = 0; bombHits = 0; elapsed = 0; best = 0; paused = false; gameOn = true; update(); playSound('start');
+  clearChallenge(); score = 0; combo = 0; misses = 0; bombHits = 0; elapsed = 0; best = 0; challengeUsed = false; challengeHits = 0; paused = false; gameOn = true; update(); playSound('start');
   popMessage('round started'); startButton.innerHTML = 'Playing <span>●</span>'; startButton.disabled = true;
   spawnMole();
   timerId = setInterval(() => { elapsed++; update(); }, 1000);
@@ -121,11 +135,13 @@ holes.forEach(hole => hole.addEventListener('click', () => {
   const mole = activeMoles.get(hole);
   if (!mole || Date.now() > mole.until) { registerMiss(); return; }
   clearTimeout(mole.timeout); activeMoles.delete(hole); hole.classList.remove('up', 'golden', 'angel', 'bomb', 'blast'); hole.classList.add('hit'); setTimeout(() => hole.classList.remove('hit'), 300);
-  if (mole.angel) { wins++; update(); winGame(); return; }
+  if (mole.challenge) { score += 50; misses = 0; challengeHits++; hitFeedback(hole, '+50'); playSound('hit'); update(); if (challengeHits === 3) { clearChallenge(); activeMoles.clear(); holes.forEach(item => item.classList.remove('up', 'golden')); popMessage('TRIO CLEARED!', true); summonChallengeAngel(); } else popMessage(`GOLDEN ${challengeHits}/3`); return; }
+  if (mole.challengeAngel || mole.angel) { wins++; update(); winGame(); return; }
   if (mole.blast) { triggerVolatileBomb(hole); return; }
   if (mole.bomb) { score -= 20; combo = 0; bombHits++; popMessage('BOMB MOLE -20'); playSound('miss'); if (bombHits > 5) endGame('too many bombs, round over'); }
   else { score += mole.golden ? 50 : 5; misses = 0; combo++; best = Math.max(best, score); hitFeedback(hole, mole.golden ? '+50' : '+5'); playSound('hit'); if (combo >= 3) { popMessage('COMBO!', true); burst(); } else popMessage(mole.golden ? '+50 GOLDEN MOLE' : '+5 points'); }
   update();
+  if (!challengeUsed && score >= 500 && !mole.bomb && !mole.blast) startGoldenChallenge();
 }));
 
 startButton.addEventListener('click', startGame);
@@ -145,7 +161,7 @@ resumeButton.addEventListener('click', () => {
   spawnMole(); timerId = setInterval(() => { elapsed++; update(); }, 1000);
 });
 pauseMenuButton.addEventListener('click', () => { paused = false; gameOn = false; clearInterval(timerId); clearTimeout(spawnId); activeMoles.forEach(mole => clearTimeout(mole.timeout)); activeMoles.clear(); pauseScreen.hidden = true; gameShell.classList.remove('is-visible'); mainMenu.hidden = false; startButton.disabled = false; startButton.innerHTML = 'Start round <span>→</span>'; });
-function winGame() { gameOn = false; paused = false; clearInterval(timerId); clearTimeout(spawnId); activeMoles.forEach(mole => clearTimeout(mole.timeout)); activeMoles.clear(); holes.forEach(hole => hole.classList.remove('up', 'golden', 'angel', 'bomb', 'blast', 'scared', 'blast-charge', 'boom')); winScreen.hidden = false; }
+function winGame() { gameOn = false; paused = false; clearChallenge(); clearInterval(timerId); clearTimeout(spawnId); activeMoles.forEach(mole => clearTimeout(mole.timeout)); activeMoles.clear(); holes.forEach(hole => hole.classList.remove('up', 'golden', 'angel', 'bomb', 'blast', 'scared', 'blast-charge', 'boom')); winScreen.classList.add('celebrate'); winScreen.hidden = false; burst(); setTimeout(() => winScreen.classList.remove('celebrate'), 900); }
 winPlay.addEventListener('click', () => { winScreen.hidden = true; startGame(); });
 winMenu.addEventListener('click', () => { winScreen.hidden = true; gameShell.classList.remove('is-visible'); mainMenu.hidden = false; startButton.disabled = false; startButton.innerHTML = 'Start round <span>→</span>'; });
 settingsButton.addEventListener('click', () => {
