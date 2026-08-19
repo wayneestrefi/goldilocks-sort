@@ -33,7 +33,8 @@ const confetti = document.querySelector('#confetti');
 const sounds = {
   hit: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3',
   start: 'https://assets.mixkit.co/active_storage/sfx/2580/2580-preview.mp3',
-  miss: 'https://assets.mixkit.co/active_storage/sfx/2955/2955-preview.mp3'
+  miss: 'https://assets.mixkit.co/active_storage/sfx/2955/2955-preview.mp3',
+  explosion: 'explosion_1.mp3'
 };
 let score = 0, combo = 0, misses = 0, bombHits = 0, wins = 0, elapsed = 0, best = 0;
 let gameOn = false, paused = false, activeMoles = new Map(), timerId, spawnId, challengeTimer, challengeClock;
@@ -49,6 +50,7 @@ const roasts = [
   'the moles have officially outplayed you.',
   'that round had the survival skills of a decorative flower.'
 ];
+holes.forEach(hole => { const bombCore = document.createElement('b'); bombCore.className = 'bomb-core'; bombCore.setAttribute('aria-hidden', 'true'); hole.querySelector('.mole').appendChild(bombCore); });
 
 function synthPop() {
   const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -125,9 +127,9 @@ function hitFeedback(hole, text) { hole.classList.add('splatted'); const label =
 function triggerVolatileBomb(hole) {
   gameOn = false; clearInterval(timerId); clearTimeout(spawnId);
   activeMoles.forEach((mole, activeHole) => { clearTimeout(mole.timeout); if (activeHole !== hole) activeHole.classList.add('scared'); });
-  activeMoles.clear(); hole.classList.add('up', 'blast-charge');
-  setTimeout(() => { hole.classList.add('boom'); boomText.hidden = false; boomText.classList.add('show'); }, 850);
-  setTimeout(() => { boomText.classList.remove('show'); boomText.hidden = true; hole.classList.remove('blast-charge', 'boom', 'scared'); endGame('BOOM!', 'you saw the bomb and still clicked it. incredible work.'); }, 1250);
+  activeMoles.clear(); hole.classList.add('up', 'bomb', 'blast-charge');
+  setTimeout(() => { hole.classList.add('boom'); boomText.hidden = false; boomText.classList.add('show'); playSound('explosion'); }, 1750);
+  setTimeout(() => { boomText.classList.remove('show'); boomText.hidden = true; hole.classList.remove('blast-charge', 'boom', 'bomb', 'scared'); endGame('BOOM!', 'you saw the bomb and still clicked it. incredible work.'); }, 2450);
 }
 
 holes.forEach(hole => hole.addEventListener('click', () => {
