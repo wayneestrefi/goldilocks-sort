@@ -22,23 +22,40 @@
       <div class="settings-panel" id="settingsPanel" hidden>
         <div class="settings-row"><span>Sound effects</span><button class="sound-toggle on" id="soundToggle" aria-pressed="true">On</button></div>
         <p>more settings coming soon</p>
-      </div>
-      <div class="mode-picker" aria-label="Difficulty mode">
-        <span>DIFFICULTY</span>
-        <div class="mode-options">
-          <button class="mode-option" data-mode="easy">Easy</button>
-          <button class="mode-option active" data-mode="medium">Medium</button>
-          <button class="mode-option" data-mode="hard">Hard</button>
-          <button class="mode-option" data-mode="impossible">Impossible</button>
+        <div class="mode-picker" aria-label="Difficulty mode">
+          <span>DIFFICULTY</span>
+          <div class="mode-options">
+            <button class="mode-option" data-mode="easy">Easy</button>
+            <button class="mode-option active" data-mode="medium">Medium</button>
+            <button class="mode-option" data-mode="hard">Hard</button>
+            <button class="mode-option" data-mode="impossible">Impossible</button>
+          </div>
         </div>
       </div>
     </div>
   </section>
   <div class="countdown" id="countdown" hidden aria-live="assertive"><span id="countdownNumber">3</span></div>
+  <div class="boom-text" id="boomText" hidden>BOOM!</div>
+  <section class="pause-screen" id="pauseScreen" hidden aria-label="Paused">
+    <p class="lose-kicker">GAME PAUSED</p><h2>TAKE A BREATH</h2>
+    <div class="loss-actions"><button class="menu-button primary" id="resumeButton">Resume <span>→</span></button><button class="menu-button secondary" id="pauseMenuButton">Back to menu</button></div>
+  </section>
+  <section class="lose-screen" id="loseScreen" hidden aria-live="assertive">
+    <p class="lose-kicker">ROUND COMPLETE</p>
+    <h2>YOU LOSE!</h2>
+    <p class="lose-reason" id="loseReason">the bomb mole got you.</p>
+    <p class="roast" id="roast">the moles are sending a strongly worded letter.</p>
+    <div class="loss-actions"><button class="menu-button primary" id="lossPlay">Try again <span>↻</span></button><button class="menu-button secondary" id="lossMenu">Main menu</button></div>
+  </section>
+  <section class="win-screen" id="winScreen" hidden aria-live="assertive">
+    <p class="lose-kicker">RARE DROP FOUND</p><h2>YOU WIN!</h2>
+    <p class="lose-reason" id="winReason">the angel mole chose you.</p><p class="powerup-note">power-ups coming soon</p>
+    <div class="loss-actions"><button class="menu-button primary" id="winPlay">Play again <span>↻</span></button><button class="menu-button secondary" id="winMenu">Main menu</button></div>
+  </section>
   <main class="game-shell">
     <header class="topbar">
       <div class="brand"><span class="brand-icon"></span><span>OVERWORLD</span></div>
-      <div class="score-card" aria-live="polite"><span class="label">SCORE</span><span id="score">000</span></div>
+      <div class="top-actions"><button class="pause-button" id="pauseButton">Pause</button><div class="score-card" aria-live="polite"><span class="label">SCORE</span><span id="score">000</span></div></div>
     </header>
 
     <section class="hero">
@@ -52,6 +69,7 @@
       <div class="stat"><span class="stat-icon combo">×</span><div><small>COMBO</small><strong id="combo">0</strong></div></div>
       <div class="stat"><span class="stat-icon best">★</span><div><small>BEST</small><strong id="best">0</strong></div></div>
       <div class="stat"><span class="stat-icon misses">!</span><div><small>MISSES</small><strong id="misses">0</strong></div></div>
+      <div class="stat"><span class="stat-icon wins">✦</span><div><small>WINS</small><strong id="wins">0</strong></div></div>
     </section>
 
     <section class="board-wrap">
